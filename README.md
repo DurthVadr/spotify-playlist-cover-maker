@@ -2,7 +2,7 @@
 
 A tiny, single-file web tool that turns any portrait image into a 1:1 square — perfect for Spotify, Apple Music, or YouTube Music cover art. It samples the background color from the image corners and pads the left and right sides with that color, so nothing gets cropped and your text stays intact.
 
-**Live demo:** _add your GitHub Pages URL here once deployed_
+**Live demo:** https://durthvadr.github.io/spotify-playlist-cover-maker/
 
 ## Features
 
