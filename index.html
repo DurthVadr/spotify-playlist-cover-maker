@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Square Cover Maker — make any image 1:1 for Spotify, Apple Music, etc.</title>
+<meta name="description" content="Drop a portrait image, get a 1:1 square ready for Spotify, Apple Music or any cover art. Auto-samples the background color and pads left/right — no cropping, no upload, 100% local in your browser.">
+<meta name="theme-color" content="#0f0f12">
+
+<!-- Open Graph / social previews -->
+<meta property="og:title" content="Square Cover Maker">
+<meta property="og:description" content="Make any image 1:1 for Spotify covers — pads left/right with the background color. 100% in your browser.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23f5efdc'/%3E%3Crect x='14' y='14' width='36' height='36' rx='6' fill='%236c7cff'/%3E%3C/svg%3E">
+
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    margin: 0;
+    padding: 24px;
+    background: #0f0f12;
+    color: #eaeaea;
+    min-height: 100vh;
+  }
+  h1 { font-size: 22px; margin: 0 0 4px; font-weight: 600; }
+  p.sub { color: #9b9ba3; font-size: 13px; margin: 0 0 20px; line-height: 1.5; }
+  p.sub .pill {
+    display: inline-block;
+    background: #1a3a1f;
+    color: #7ee08a;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  .drop {
+    border: 2px dashed #3a3a45;
+    border-radius: 14px;
+    padding: 60px 24px;
+    text-align: center;
+    color: #9b9ba3;
+    cursor: pointer;
+    transition: all .15s ease;
+    background: #16161b;
+  }
+  .drop:hover, .drop.dragover {
+    border-color: #6c7cff;
+    background: #1a1b24;
+    color: #d8d8e0;
+  }
+  .drop strong { color: #eaeaea; font-size: 16px; }
+  .drop small { display: block; margin-top: 6px; font-size: 12px; }
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    background: #16161b;
+    padding: 16px;
+    border-radius: 12px;
+    margin: 16px 0;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 11px; color: #9b9ba3; text-transform: uppercase; letter-spacing: .5px; }
+  input[type="number"], select {
+    background: #0f0f12;
+    border: 1px solid #2a2a33;
+    color: #eaeaea;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  input[type="color"] {
+    width: 100%;
+    height: 38px;
+    border: 1px solid #2a2a33;
+    border-radius: 8px;
+    background: #0f0f12;
+    cursor: pointer;
+    padding: 2px;
+  }
+  .swatch-wrap { display: flex; gap: 8px; align-items: center; }
+  .swatch-wrap input[type="text"] {
+    flex: 1;
+    background: #0f0f12;
+    border: 1px solid #2a2a33;
+    color: #eaeaea;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 13px;
+  }
+  button {
+    background: #6c7cff;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button:hover { background: #5a6cff; }
+  button.secondary { background: #2a2a33; }
+  button.secondary:hover { background: #353541; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; justify-content: center; }
+  .preview {
+    margin-top: 16px;
+    background: #16161b;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  canvas {
+    max-width: 100%;
+    max-height: 70vh;
+    height: auto;
+    border-radius: 8px;
+    background: #0f0f12;
+  }
+  .info { font-size: 12px; color: #9b9ba3; margin-top: 8px; font-family: ui-monospace, monospace; }
+  .checkbox-row { display: flex; gap: 8px; align-items: center; }
+  .checkbox-row input { width: 16px; height: 16px; accent-color: #6c7cff; }
+  .checkbox-row label { text-transform: none; font-size: 13px; color: #eaeaea; letter-spacing: 0; }
+  footer {
+    text-align: center;
+    color: #6e6e78;
+    font-size: 12px;
+    margin-top: 32px;
+    line-height: 1.6;
+  }
+  footer a { color: #9b9ba3; text-decoration: none; }
+  footer a:hover { color: #eaeaea; }
+  @media (max-width: 540px) {
+    body { padding: 16px; }
+    h1 { font-size: 18px; }
+    .drop { padding: 36px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Square Cover Maker</h1>
+  <p class="sub">
+    Drop a portrait image — get a 1:1 square padded with the background color. Perfect for Spotify, Apple Music, YouTube Music covers.
+    <span class="pill">100% local · nothing is uploaded</span>
+  </p>
+
+  <div id="drop" class="drop">
+    <strong>Drop image here</strong>
+    <small>or click to choose · PNG, JPG, WebP</small>
+    <input type="file" id="file" accept="image/*" hidden>
+  </div>
+
+  <div class="controls" id="controls" style="display:none;">
+    <div class="field">
+      <label>Output size</label>
+      <select id="size">
+        <option value="3000">3000 × 3000 (Spotify recommended)</option>
+        <option value="2400">2400 × 2400</option>
+        <option value="1500">1500 × 1500</option>
+        <option value="640">640 × 640 (Spotify minimum)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Pad color</label>
+      <div class="swatch-wrap">
+        <input type="color" id="color" value="#f5efdc">
+        <input type="text" id="colorHex" value="#f5efdc">
+      </div>
+    </div>
+    <div class="field">
+      <label>Color source</label>
+      <button class="secondary" id="autoColor">Auto-sample from corners</button>
+    </div>
+    <div class="field">
+      <label>Format</label>
+      <select id="format">
+        <option value="image/png">PNG (lossless)</option>
+        <option value="image/jpeg">JPEG (smaller)</option>
+      </select>
+    </div>
+    <div class="field" style="grid-column: 1 / -1;">
+      <div class="checkbox-row">
+        <input type="checkbox" id="fitMode">
+        <label for="fitMode">Shrink to fit if image is wider than tall (no cropping)</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="preview" id="preview" style="display:none;">
+    <canvas id="canvas"></canvas>
+    <div class="info" id="info"></div>
+    <div class="actions">
+      <button id="download">Download</button>
+      <button class="secondary" id="reset">New image</button>
+    </div>
+  </div>
+
+  <footer>
+    No tracking. No accounts. No uploads. Your image never leaves your browser.<br>
+    Free to use, share, fork.
+  </footer>
+</div>
+
+<script>
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+const controls = document.getElementById('controls');
+const preview = document.getElementById('preview');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const info = document.getElementById('info');
+const sizeSel = document.getElementById('size');
+const colorInp = document.getElementById('color');
+const colorHex = document.getElementById('colorHex');
+const formatSel = document.getElementById('format');
+const fitMode = document.getElementById('fitMode');
+const autoBtn = document.getElementById('autoColor');
+const downloadBtn = document.getElementById('download');
+const resetBtn = document.getElementById('reset');
+
+let img = null;
+let originalName = 'cover';
+
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+drop.addEventListener('drop', e => {
+  e.preventDefault();
+  drop.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+// Paste support — Ctrl/Cmd+V from clipboard
+document.addEventListener('paste', e => {
+  const items = e.clipboardData?.items || [];
+  for (const it of items) {
+    if (it.type.startsWith('image/')) {
+      handleFile(it.getAsFile());
+      break;
+    }
+  }
+});
+
+function handleFile(file) {
+  if (!file || !file.type.startsWith('image/')) { alert('Please choose an image file.'); return; }
+  originalName = (file.name || 'cover').replace(/\.[^.]+$/, '') || 'cover';
+  const reader = new FileReader();
+  reader.onload = e => {
+    img = new Image();
+    img.onload = () => {
+      controls.style.display = 'grid';
+      preview.style.display = 'block';
+      drop.style.display = 'none';
+      sampleCornerColor();
+      render();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function sampleCornerColor() {
+  const off = document.createElement('canvas');
+  off.width = img.naturalWidth;
+  off.height = img.naturalHeight;
+  const octx = off.getContext('2d');
+  octx.drawImage(img, 0, 0);
+  const samples = [
+    [0, 0], [img.naturalWidth - 1, 0],
+    [0, img.naturalHeight - 1], [img.naturalWidth - 1, img.naturalHeight - 1],
+    [Math.floor(img.naturalWidth * 0.02), Math.floor(img.naturalHeight * 0.02)],
+    [Math.floor(img.naturalWidth * 0.98), Math.floor(img.naturalHeight * 0.02)],
+  ];
+  let r = 0, g = 0, b = 0;
+  for (const [x, y] of samples) {
+    const d = octx.getImageData(x, y, 1, 1).data;
+    r += d[0]; g += d[1]; b += d[2];
+  }
+  r = Math.round(r / samples.length);
+  g = Math.round(g / samples.length);
+  b = Math.round(b / samples.length);
+  const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+  colorInp.value = hex;
+  colorHex.value = hex;
+}
+
+function render() {
+  if (!img) return;
+  const size = parseInt(sizeSel.value, 10);
+  canvas.width = size;
+  canvas.height = size;
+  ctx.fillStyle = colorInp.value;
+  ctx.fillRect(0, 0, size, size);
+
+  let scale;
+  if (fitMode.checked) {
+    scale = Math.min(size / img.naturalWidth, size / img.naturalHeight);
+  } else {
+    scale = size / img.naturalHeight;
+    if (img.naturalWidth * scale > size) scale = size / img.naturalWidth;
+  }
+  const dw = Math.round(img.naturalWidth * scale);
+  const dh = Math.round(img.naturalHeight * scale);
+  const dx = Math.round((size - dw) / 2);
+  const dy = Math.round((size - dh) / 2);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, dx, dy, dw, dh);
+  info.textContent = `Output: ${size}×${size}  ·  Source: ${img.naturalWidth}×${img.naturalHeight}  ·  Side padding: ${dx}px`;
+}
+
+[sizeSel, colorInp, formatSel, fitMode].forEach(el => el.addEventListener('input', () => {
+  if (el === colorInp) colorHex.value = colorInp.value;
+  render();
+}));
+colorHex.addEventListener('change', () => {
+  if (/^#[0-9a-fA-F]{6}$/.test(colorHex.value)) {
+    colorInp.value = colorHex.value;
+    render();
+  }
+});
+autoBtn.addEventListener('click', () => { sampleCornerColor(); render(); });
+
+downloadBtn.addEventListener('click', () => {
+  const fmt = formatSel.value;
+  const ext = fmt === 'image/jpeg' ? 'jpg' : 'png';
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${originalName}-square-${canvas.width}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, fmt, fmt === 'image/jpeg' ? 0.95 : undefined);
+});
+
+resetBtn.addEventListener('click', () => {
+  img = null;
+  controls.style.display = 'none';
+  preview.style.display = 'none';
+  drop.style.display = 'block';
+  fileInput.value = '';
+});
+</script>
+</body>
+</html>
