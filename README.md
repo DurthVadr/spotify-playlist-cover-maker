@@ -4,6 +4,8 @@ A tiny, single-file web tool that turns any portrait image into a 1:1 square —
 
 **Live demo:** https://durthvadr.github.io/spotify-playlist-cover-maker/
 
+![Square Cover Maker — drag-and-drop UI](docs/screenshot.png)
+
 ## Features
 
 - Drag and drop, click to choose, or paste from clipboard
